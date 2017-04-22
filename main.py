@@ -48,17 +48,20 @@ class Handler(webapp2.RequestHandler):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
-    def user(self, name):
-        return name and self.read_secure_cookie(name)
+    # Returns the username from cookie
+    def username(self):
+        return self.read_secure_cookie("username")
 
+    # Turns away unauthorized users
     def user_page(self, origin_page, alt_page, **kw):
-        if self.read_secure_cookie("username"):
+        if self.username():
             self.render(origin_page, **kw)
         else:
             self.redirect(alt_page)
 
+    # Turns away authorized users
     def anom_page(self, origin_page, alt_page, **kw):
-        if self.read_secure_cookie("username"):
+        if self.username():
             self.redirect(alt_page)
         else:
             self.render(origin_page, **kw)
@@ -82,8 +85,9 @@ class Blogs(db.Model):
 
 class MainPage(Handler):
     def get(self):
+        username = self.username()
         blogs = db.GqlQuery("SELECT * FROM Blogs ORDER BY created DESC")
-        self.render("index.html", blogs=blogs)
+        self.render("index.html", blogs=blogs, username=username)
 
 
 # Username validation
@@ -106,7 +110,6 @@ def query_username(username):
     user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username)
     result = user.get()
     return result.username
-
 
 
 class SignUpPage(Handler):
@@ -153,20 +156,19 @@ class SignUpPage(Handler):
 
 class WelcomePage(Handler):
     def get(self):
-        username = self.user("username")
+        username = self.username()
         self.user_page("welcome.html", "/signup", username=username)
 
 
 class BlogSubmit(Handler):
     def get(self):
-        if self.read_secure_cookie("username"):
-            self.render("blogsubmit.html")
-        else:
-            self.redirect("/signup")
+        username = self.username()
+        self.user_page("blogsubmit.html", "/signup", username=username)
 
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
+        username = self.username()
 
         if title and content:
             # Add <br> automatically when a new line is created.
@@ -177,14 +179,14 @@ class BlogSubmit(Handler):
             content = content.replace("</p>", "")
 
             # Add to Datastore
-            blog = Blogs(title=title, content=content, username=self.user("username"))
+            blog = Blogs(title=title, content=content, username=username)
             blog.put()
 
             # Redirect to home page
             self.redirect("/")
         else:
             error = "We need both the title and the blog post."
-            self.render("blogsubmit.html", title=title, content=content, error=error)
+            self.render("blogsubmit.html", title=title, content=content, error=error, username=username)
 
 
 app = webapp2.WSGIApplication([
