@@ -44,6 +44,24 @@ class Handler(webapp2.RequestHandler):
             "%s=%s; PATH=/" % (name, cookie_val)
         )
 
+    def read_secure_cookie(self, name):
+        cookie_val = self.request.cookies.get(name)
+        return cookie_val and check_secure_val(cookie_val)
+
+    def user(self, name):
+        return name and self.read_secure_cookie(name)
+
+    def user_page(self, origin_page, alt_page, **kw):
+        if self.read_secure_cookie("username"):
+            self.render(origin_page, **kw)
+        else:
+            self.redirect(alt_page)
+
+    def anom_page(self, origin_page, alt_page, **kw):
+        if self.read_secure_cookie("username"):
+            self.redirect(alt_page)
+        else:
+            self.render(origin_page, **kw)
 
 # Users entity in Google Datastore
 class Users(db.Model):
@@ -55,7 +73,7 @@ class Users(db.Model):
 
 # Blogs entity in Google Datastore
 class Blogs(db.Model):
-    # username = db.StringProperty(required = True)
+    username = db.StringProperty(required = True)
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -90,9 +108,10 @@ def query_username(username):
     return result.username
 
 
+
 class SignUpPage(Handler):
     def get(self):
-        self.render("signup.html")
+        self.anom_page("signup.html", "/welcome")
 
     def post(self):
         have_error = False
@@ -128,22 +147,22 @@ class SignUpPage(Handler):
             # Create cookie
             self.set_secure_cookie("username", username)
 
-            self.redirect("/welcome?username=" + username)
+            # Redirect user to welcome page
+            self.redirect("/welcome")
 
 
 class WelcomePage(Handler):
     def get(self):
-        username = self.request.get("username")
-        if valid_username(username):
-            user = query_username(username)
-            self.render("welcome.html", username=user)
-        else:
-            self.redirect("/signup")
+        username = self.user("username")
+        self.user_page("welcome.html", "/signup", username=username)
 
 
 class BlogSubmit(Handler):
     def get(self):
-        self.render("blogsubmit.html")
+        if self.read_secure_cookie("username"):
+            self.render("blogsubmit.html")
+        else:
+            self.redirect("/signup")
 
     def post(self):
         title = self.request.get("title")
@@ -158,7 +177,7 @@ class BlogSubmit(Handler):
             content = content.replace("</p>", "")
 
             # Add to Datastore
-            blog = Blogs(title=title, content=content)
+            blog = Blogs(title=title, content=content, username=self.user("username"))
             blog.put()
 
             # Redirect to home page
