@@ -1,7 +1,11 @@
 import os
+import re
+import hashlib
+import hmac
+import random
+
 import jinja2
 import webapp2
-import re
 
 from HTMLParser import HTMLParser
 from google.appengine.ext import db
@@ -9,6 +13,16 @@ from google.appengine.ext import db
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                autoescape=True)
+
+secret = "lkasdjf$j89u_345n45e-jtgdf8^459u23asd"
+
+def make_secure_val(val):
+    return "%s|%s" % (val, hmac.new(secret, val).hexdigest())
+
+def check_secure_val(secure_val):
+    val = secure_val.split("|")[0]
+    if secure_val == make_secure_val(val):
+        return val
 
 
 class Handler(webapp2.RequestHandler):
@@ -22,8 +36,16 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+    def set_secure_cookie(self, name, val):
+        cookie_val = str(make_secure_val(val))
+        name = str(name)
+        self.response.headers.add_header(
+            "Set-Cookie",
+            "%s=%s; PATH=/" % (name, cookie_val)
+        )
 
-# User entity in Google Datastore
+
+# Users entity in Google Datastore
 class Users(db.Model):
     username = db.StringProperty(required = True)
     password = db.StringProperty(required = True)
@@ -31,7 +53,7 @@ class Users(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
 
 
-# Blog entity in Google Datastore
+# Blogs entity in Google Datastore
 class Blogs(db.Model):
     # username = db.StringProperty(required = True)
     title = db.StringProperty(required = True)
@@ -99,8 +121,13 @@ class SignUpPage(Handler):
         if have_error:
             self.render("signup.html", **params)
         else:
+            # Create user in DB
             user = Users(username=username, password=password, email=email)
             user.put()
+
+            # Create cookie
+            self.set_secure_cookie("username", username)
+
             self.redirect("/welcome?username=" + username)
 
 
