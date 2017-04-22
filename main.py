@@ -3,6 +3,7 @@ import jinja2
 import webapp2
 import re
 
+from HTMLParser import HTMLParser
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -34,8 +35,9 @@ class Users(db.Model):
 class Blogs(db.Model):
     # username = db.StringProperty(required = True)
     title = db.StringProperty(required = True)
-    blog_post = db.TextProperty(required = True)
+    content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+    updated = db.DateTimeProperty(auto_now = True)
 
 
 class MainPage(Handler):
@@ -112,26 +114,36 @@ class WelcomePage(Handler):
             self.redirect("/signup")
 
 
-class BlogPost(Handler):
+class BlogSubmit(Handler):
     def get(self):
-        self.render("blogpost.html")
+        self.render("blogsubmit.html")
 
     def post(self):
         title = self.request.get("title")
-        blog_post = self.request.get("post")
+        content = self.request.get("content")
 
-        if title and blog_post:
-            blog = Blogs(title=title, blog_post=blog_post)
+        if title and content:
+            # Add <br> automatically when a new line is created.
+            content = content.replace('\n', '<br>')
+
+            # Remove <p> tag from posting
+            content = content.replace("<p>", "")
+            content = content.replace("</p>", "")
+
+            # Add to Datastore
+            blog = Blogs(title=title, content=content)
             blog.put()
+
+            # Redirect to home page
             self.redirect("/")
         else:
             error = "We need both the title and the blog post."
-            self.render("blogpost.html", title=title, blog_post=blog_post, error=error)
+            self.render("blogsubmit.html", title=title, content=content, error=error)
 
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
-    ('/blogpost', BlogPost)
+    ('/blogsubmit', BlogSubmit)
 ], debug=True)
