@@ -18,5 +18,30 @@
     </div>
   </div>
 </section>
+<section class="blogs">
+  <div class="container">
+    {% for blog in blogs %}
+    <article class="single-article">
+      <div class="row">
+        <div class="col-12">
+          <div class="row blog-header">
+            <div class="col-8">
+              <h2 class="blog-title">{{blog.title}}</h2>
+            </div>
+            <div class="col-4 text-right">
+              <p class="blog-date">{{blog.created}}</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <p class="blog-content">{{blog.blog_post}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
 
 {% endblock %}

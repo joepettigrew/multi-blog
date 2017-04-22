@@ -22,10 +22,26 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
+# User entity in Google Datastore
+class Users(db.Model):
+    username = db.StringProperty(required = True)
+    password = db.StringProperty(required = True)
+    email = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
+
+# Blog entity in Google Datastore
+class Blogs(db.Model):
+    # username = db.StringProperty(required = True)
+    title = db.StringProperty(required = True)
+    blog_post = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
 
 class MainPage(Handler):
     def get(self):
-        self.render("index.html")
+        blogs = db.GqlQuery("SELECT * FROM Blogs ORDER BY created DESC")
+        self.render("index.html", blogs=blogs)
 
 
 # Username validation
@@ -42,6 +58,12 @@ def valid_password(password):
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
+
+# Get Username from DB
+def query_username(username):
+    user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username)
+    result = user.get()
+    return result.username
 
 
 class SignUpPage(Handler):
@@ -75,6 +97,8 @@ class SignUpPage(Handler):
         if have_error:
             self.render("signup.html", **params)
         else:
+            user = Users(username=username, password=password, email=email)
+            user.put()
             self.redirect("/welcome?username=" + username)
 
 
@@ -82,12 +106,32 @@ class WelcomePage(Handler):
     def get(self):
         username = self.request.get("username")
         if valid_username(username):
-            self.render("welcome.html", username=username)
+            user = query_username(username)
+            self.render("welcome.html", username=user)
         else:
             self.redirect("/signup")
+
+
+class BlogPost(Handler):
+    def get(self):
+        self.render("blogpost.html")
+
+    def post(self):
+        title = self.request.get("title")
+        blog_post = self.request.get("post")
+
+        if title and blog_post:
+            blog = Blogs(title=title, blog_post=blog_post)
+            blog.put()
+            self.redirect("/")
+        else:
+            error = "We need both the title and the blog post."
+            self.render("blogpost.html", title=title, blog_post=blog_post, error=error)
+
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
-    ('/welcome', WelcomePage)
+    ('/welcome', WelcomePage),
+    ('/blogpost', BlogPost)
 ], debug=True)

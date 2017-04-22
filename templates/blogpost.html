@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="signup">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center mb-4">Submit your blog post!</h2>
+        <form class="signup-form" method="post">
+          <div class="form-group row justify-content-center">
+            <label for="title" class="col-sm-2 col-form-label">Title</label>
+            <div class="col-sm-10 col-lg-7">
+              <input type="text" class="form-control" id="title" name="title" value="{{title}}">
+            </div>
+          </div>
+          <div class="form-group row justify-content-center">
+            <label for="post" class="col-sm-2 col-form-label">Blog Post</label>
+            <div class="col-sm-10 col-lg-7">
+              <textarea class="form-control blog-text" id="post" name="post">{{blog_post}}</textarea>
+            </div>
+          </div>
+          <div class="row justify-content-center">
+            <div class="col-sm-10 col-lg-7 offset-sm-2">
+              <p class="error mb-3">{{error}}</p>
+            </div>
+          </div>
+          <div class="form-group row justify-content-center">
+            <div class="col-sm-10 col-lg-7 offset-sm-2">
+              <button type="submit" class="btn btn-custom">Post blog!</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{% endblock %}
