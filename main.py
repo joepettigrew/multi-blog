@@ -70,6 +70,10 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'username=; Path=/')
 
+    def style_content(content):
+        content = content.replace('\n', '<br>')
+        return content
+
 
 # Users entity in Google Datastore
 class Users(db.Model):
@@ -87,9 +91,19 @@ class Blogs(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     updated = db.DateTimeProperty(auto_now = True)
 
+    def render(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        return self._render_text
+
     @classmethod
     def by_id(cls, uid):
         return cls.get_by_id(int(uid))
+
+    @classmethod
+    def verify_owner(cls, uid, username):
+        if cls.get_by_id(int(uid)) is not None:
+            owner_name = cls.get_by_id(int(uid)).username
+            return owner_name == username
 
 
 class MainPage(Handler):
@@ -212,9 +226,6 @@ class BlogSubmit(Handler):
         auth_user = self.username()
 
         if title and content:
-            # Add <br> automatically when a new line is created.
-            content = content.replace('\n', '<br>')
-
             # Remove <div> tag from posting
             content = content.replace("<div>", "")
             content = content.replace("</div>", "")
@@ -233,21 +244,22 @@ class BlogSubmit(Handler):
 class EditPost(Handler):
     def get(self):
         auth_user = self.username()
-        blog_id = int(self.request.get("bid"))
-        blog = Blogs.by_id(blog_id)
-        title = blog.title
-        content = blog.content
-        self.user_page("editpost.html", "/signup", auth_user=auth_user, title=title, content=content, blog_id = blog_id)
+        blog_id = self.request.get("bid")
+        if Blogs.verify_owner(blog_id, auth_user):
+            blog = Blogs.by_id(blog_id)
+            title = blog.title
+            content = blog.content
+            self.user_page("editpost.html", "/signup", auth_user=auth_user, title=title, content=content, blog_id = blog_id)
+        else:
+            self.redirect("/welcome")
 
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
         blog_id = self.request.get("bid")
+        auth_user = self.username()
 
         if title and content:
-            # Add <br> automatically when a new line is created.
-            content = content.replace('\n', '<br>')
-
             # Remove <div> tag from posting
             content = content.replace("<div>", "")
             content = content.replace("</div>", "")
@@ -259,10 +271,18 @@ class EditPost(Handler):
             blog.put()
 
             # Redirect to home page
-            self.redirect("/")
+            self.redirect("/welcome")
         else:
             error = "We need both the title and the blog post."
-            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=auth_user)
+            self.render("editpost.html", title=title, content=content, error=error, blog_id = blog_id, auth_user=auth_user)
+
+
+class DeletePost(Handler):
+    def post(self):
+        blog_id = self.request.get("bid")
+        blog = Blogs.by_id(blog_id)
+        blog.delete()
+        self.redirect("/welcome")
 
 
 class LogIn(Handler):
@@ -307,6 +327,7 @@ app = webapp2.WSGIApplication([
     ('/welcome', WelcomePage),
     ('/blogsubmit', BlogSubmit),
     ('/edit-post', EditPost),
+    ('/delete-post', DeletePost),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)

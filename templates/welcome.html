@@ -3,15 +3,21 @@
 {% block content %}
 
 <section class="blogs">
-  <h1 class="text-center pb-4">{{auth_user}}'s blog posts</h1>
+  <h1 class="text-center pb-4">Welcome {{auth_user}}!</h1>
   <div class="container">
+    <div class="row mb-5">
+      <div class="col-12 text-center">
+        <p>Want to make a blog post?</p>
+        <a class="btn btn-custom" href="/blogsubmit">Post a blog</a>
+      </div>
+    </div>
     {% for blog in blogs %}
     <article class="single-article">
       <div class="row">
         <div class="col-12">
           <div class="row blog-header">
             <div class="col-12 col-md-8">
-              <h2 class="blog-title">{{blog.title}} {{blog.key().id()}}</h2>
+              <h2 class="blog-title">{{blog.title}}</h2>
             </div>
             <div class="col-12 col-md-4 text-right">
               <p class="blog-info">{{blog.username}} | {{blog.created.date()}}</p>
@@ -19,7 +25,7 @@
           </div>
           <div class="row">
             <div class="col-12">
-              <div class="blog-content">{{blog.content | safe}}</div>
+              <div class="blog-content">{{blog.render() | safe}}</div>
             </div>
           </div>
           <div class="row">
@@ -31,14 +37,6 @@
       </div>
     </article>
     {% endfor %}
-
-    <div class="row">
-      <div class="col-12 text-center">
-        <p>Want to make a blog post?</p>
-        <a class="btn btn-custom" href="/blogsubmit">Post a blog</a>
-      </div>
-    </div>
-
   </div>
 </section>
 
