@@ -8,7 +8,6 @@ from string import letters
 import jinja2
 import webapp2
 
-from HTMLParser import HTMLParser
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -91,9 +90,9 @@ class Blogs(db.Model):
 
 class MainPage(Handler):
     def get(self):
-        username = self.username()
+        auth_user = self.username()
         blogs = db.GqlQuery("SELECT * FROM Blogs ORDER BY created DESC")
-        self.render("index.html", blogs=blogs, username=username)
+        self.render("index.html", blogs=blogs, auth_user=auth_user)
 
 
 # Username validation
@@ -193,19 +192,19 @@ class SignUpPage(Handler):
 
 class WelcomePage(Handler):
     def get(self):
-        username = self.username()
-        self.user_page("welcome.html", "/signup", username=username)
+        auth_user = self.username()
+        self.user_page("welcome.html", "/signup", auth_user=auth_user)
 
 
 class BlogSubmit(Handler):
     def get(self):
-        username = self.username()
-        self.user_page("blogsubmit.html", "/signup", username=username)
+        auth_user = self.username()
+        self.user_page("blogsubmit.html", "/signup", auth_user=auth_user)
 
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
-        username = self.username()
+        auth_user = self.username()
 
         if title and content:
             # Add <br> automatically when a new line is created.
@@ -216,14 +215,14 @@ class BlogSubmit(Handler):
             content = content.replace("</p>", "")
 
             # Add to Datastore
-            blog = Blogs(title=title, content=content, username=username)
+            blog = Blogs(title=title, content=content, username=auth_user)
             blog.put()
 
             # Redirect to home page
             self.redirect("/")
         else:
             error = "We need both the title and the blog post."
-            self.render("blogsubmit.html", title=title, content=content, error=error, username=username)
+            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=auth_user)
 
 
 class LogIn(Handler):
