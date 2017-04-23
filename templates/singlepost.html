@@ -24,14 +24,12 @@
               <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT THIS POST</a>
               {% elif auth_user and auth_user != blog.username %}
               <h4 class="footer-title">You're not the owner, but you're authenticated</h4>
-                {% for i in interactions %}
-                  {% if i.sentiment %}
-                  <p>You already liked this post</p>
-                  {% else %}
-                  <p>You already disliked this post</p>
-                  {% endif %}
-                {% endfor %}
-                {% if not interactions %}
+                {% if interactions.sentiment %}
+                <p>You already liked this post</p>
+                {% elif interactions.sentiment == False %}
+                <p>You already disliked this post</p>
+                {% endif %}
+                {% if not interactions.username %}
                 <a class="btn btn-custom" href="/like-post?bid={{blog.key().id()}}">LIKE THIS!</a>
                 <a class="btn btn-custom" href="/dislike-post?bid={{blog.key().id()}}">HATE THIS!</a>
                 {% endif %}
@@ -40,9 +38,6 @@
               {% endif %}
             </div>
           </div>
-          {% for i in interactions %}
-          <p>{{i.username}} | {{i.blog_id}}</p>
-          {% endfor %}
         </div>
       </div>
     </article>

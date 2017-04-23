@@ -346,7 +346,7 @@ class SinglePost(Handler):
     def get(self, blog_id):
         auth_user = self.username()
         blog = Blogs.by_id(blog_id)
-        interactions = Interactions.all().filter("username = ", auth_user).filter("blog_id =", int(blog_id))
+        interactions = Interactions.all().filter("username = ", auth_user).filter("blog_id =", int(blog_id)).get()
 
         if not blog:
             self.error(404)
@@ -361,7 +361,7 @@ class LikePost(Handler):
         blog_id = int(self.request.get("bid"))
 
         # Check to see if the user has interacted with this post before.
-        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id)
+        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id).get()
         if q is None:
             interaction = Interactions(username=auth_user, blog_id=blog_id, sentiment=True)
             interaction.put()
