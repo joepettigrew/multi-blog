@@ -87,6 +87,10 @@ class Blogs(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     updated = db.DateTimeProperty(auto_now = True)
 
+    @classmethod
+    def by_id(cls, uid):
+        return cls.get_by_id(int(uid))
+
 
 class MainPage(Handler):
     def get(self):
@@ -193,10 +197,7 @@ class SignUpPage(Handler):
 class WelcomePage(Handler):
     def get(self):
         auth_user = self.username()
-        blogs = db.GqlQuery(
-            "SELECT * FROM Blogs WHERE username = :1 ORDER BY created DESC",
-            auth_user
-        )
+        blogs = Blogs.all().filter("username = ", auth_user).order("-created")
         self.user_page("welcome.html", "/signup", blogs=blogs, auth_user=auth_user)
 
 
@@ -214,12 +215,47 @@ class BlogSubmit(Handler):
             # Add <br> automatically when a new line is created.
             content = content.replace('\n', '<br>')
 
-            # Remove <p> tag from posting
-            content = content.replace("<p>", "")
-            content = content.replace("</p>", "")
+            # Remove <div> tag from posting
+            content = content.replace("<div>", "")
+            content = content.replace("</div>", "")
 
             # Add to Datastore
             blog = Blogs(title=title, content=content, username=auth_user)
+            blog.put()
+
+            # Redirect to home page
+            self.redirect("/")
+        else:
+            error = "We need both the title and the blog post."
+            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=auth_user)
+
+
+class EditPost(Handler):
+    def get(self):
+        auth_user = self.username()
+        blog_id = int(self.request.get("bid"))
+        blog = Blogs.by_id(blog_id)
+        title = blog.title
+        content = blog.content
+        self.user_page("editpost.html", "/signup", auth_user=auth_user, title=title, content=content, blog_id = blog_id)
+
+    def post(self):
+        title = self.request.get("title")
+        content = self.request.get("content")
+        blog_id = self.request.get("bid")
+
+        if title and content:
+            # Add <br> automatically when a new line is created.
+            content = content.replace('\n', '<br>')
+
+            # Remove <div> tag from posting
+            content = content.replace("<div>", "")
+            content = content.replace("</div>", "")
+
+            # Update the Datastore
+            blog = Blogs.by_id(blog_id)
+            blog.title = title
+            blog.content = content
             blog.put()
 
             # Redirect to home page
@@ -270,6 +306,7 @@ app = webapp2.WSGIApplication([
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
     ('/blogsubmit', BlogSubmit),
+    ('/edit-post', EditPost),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)

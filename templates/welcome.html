@@ -11,7 +11,7 @@
         <div class="col-12">
           <div class="row blog-header">
             <div class="col-12 col-md-8">
-              <h2 class="blog-title">{{blog.title}}</h2>
+              <h2 class="blog-title">{{blog.title}} {{blog.key().id()}}</h2>
             </div>
             <div class="col-12 col-md-4 text-right">
               <p class="blog-info">{{blog.username}} | {{blog.created.date()}}</p>
@@ -19,7 +19,12 @@
           </div>
           <div class="row">
             <div class="col-12">
-              <p class="blog-content">{{blog.content | safe}}</p>
+              <div class="blog-content">{{blog.content | safe}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">Edit this post</a>
             </div>
           </div>
         </div>

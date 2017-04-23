@@ -14,4 +14,9 @@ indexes:
   properties:
   - name: username
   - name: created
+
+- kind: Blogs
+  properties:
+  - name: username
+  - name: created
     direction: desc
