@@ -90,6 +90,8 @@ class Blogs(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     updated = db.DateTimeProperty(auto_now = True)
+    likes = db.IntegerProperty()
+    dislikes = db.IntegerProperty()
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -104,6 +106,13 @@ class Blogs(db.Model):
         if cls.get_by_id(int(uid)) is not None:
             owner_name = cls.get_by_id(int(uid)).username
             return owner_name == username
+
+
+class Interactions(db.Model):
+    username = db.StringProperty()
+    blog_id = db.IntegerProperty()
+    sentiment = db.BooleanProperty()
+    comment = db.TextProperty()
 
 
 class MainPage(Handler):
@@ -230,9 +239,17 @@ class BlogSubmit(Handler):
             content = content.replace("<div>", "")
             content = content.replace("</div>", "")
 
-            # Add to Datastore
-            blog = Blogs(title=title, content=content, username=auth_user)
+            # Add to Blogs entity
+            blog = Blogs(title=title, content=content, username=auth_user, likes=0, dislikes=0)
             blog.put()
+
+            # Get Blog ID
+            blog = Blogs.all().filter("username", auth_user).order("-created").get()
+            blog_id = blog.key().id()
+
+            # Add to Interactions entity
+            interaction = Interactions(username=auth_user, blog_id=blog_id, comment="")
+            interaction.put()
 
             # Redirect to home page
             self.redirect("/")
@@ -324,16 +341,56 @@ class LogOut(Handler):
         self.logout()
         self.redirect("/")
 
+
 class SinglePost(Handler):
     def get(self, blog_id):
         auth_user = self.username()
         blog = Blogs.by_id(blog_id)
+        interactions = Interactions.all().filter("username = ", auth_user).filter("blog_id =", int(blog_id))
 
         if not blog:
             self.error(404)
             return
 
-        self.render("singlepost.html", blog = blog, auth_user=auth_user)
+        self.render("singlepost.html", blog=blog, interactions=interactions, auth_user=auth_user)
+
+
+class LikePost(Handler):
+    def get(self):
+        auth_user = self.username()
+        blog_id = int(self.request.get("bid"))
+
+        # Check to see if the user has interacted with this post before.
+        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id)
+        if q is None:
+            interaction = Interactions(username=auth_user, blog_id=blog_id, sentiment=True)
+            interaction.put()
+
+            # Update the Datastore
+            blog = Blogs.by_id(blog_id)
+            blog.likes += 1
+            blog.put()
+
+        self.redirect("/%s" % blog_id)
+
+
+class DislikePost(Handler):
+    def get(self):
+        auth_user = self.username()
+        blog_id = int(self.request.get("bid"))
+
+        # Check to see if the user has interacted with this post before.
+        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id).get()
+        if q is None:
+            interaction = Interactions(username=auth_user, blog_id=blog_id, sentiment=False)
+            interaction.put()
+
+            # Update the Datastore
+            blog = Blogs.by_id(blog_id)
+            blog.dislikes += 1
+            blog.put()
+
+        self.redirect("/%s" % blog_id)
 
 
 app = webapp2.WSGIApplication([
@@ -344,6 +401,8 @@ app = webapp2.WSGIApplication([
     ('/blogsubmit', BlogSubmit),
     ('/edit-post', EditPost),
     ('/delete-post', DeletePost),
+    ('/like-post', LikePost),
+    ('/dislike-post', DislikePost),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)

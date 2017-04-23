@@ -11,12 +11,14 @@
         <a class="btn btn-custom" href="/blogsubmit">NEW POST</a>
       </div>
     </div>
-    <table class="table">
+    <table class="table table-hover">
       <thead>
         <tr>
           <th>Created Date</th>
           <th>Last Updated</th>
           <th>Post Title</th>
+          <th>Likes</th>
+          <th>Dislikes</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -25,7 +27,9 @@
         <tr>
           <th scope="row">{{blog.created.date()}}</th>
           <td>{{blog.updated.date()}}</td>
-          <td>{{blog.title}}</td>
+          <td><a href="/{{blog.key().id()}}">{{blog.title}}</a></td>
+          <td>{{blog.likes}}</td>
+          <td>{{blog.dislikes}}</td>
           <td><a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT</a></td>
         </tr>
         {% endfor %}
