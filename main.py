@@ -113,13 +113,15 @@ def valid_email(email):
 
 # Get Username from DB
 def query_username(username):
-    user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username).get()
-    return user.username
+    if username:
+        user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username).get()
+        return user and username
 
 # Get email from DB
 def query_email(email):
-    user = db.GqlQuery("SELECT * FROM Users WHERE email = :1", email).get()
-    return user.email
+    if email:
+        user = db.GqlQuery("SELECT * FROM Users WHERE email = :1", email).get()
+        return user and user.email
 
 # Make salt for password hashing
 def make_salt(length = 5):
@@ -154,8 +156,7 @@ class SignUpPage(Handler):
         if not valid_username(username):
             params['error_username'] = "Invalid username"
             have_error = True
-
-        if username == query_username(username):
+        elif username == query_username(username):
             params['error_username'] = "Same username already exists"
             have_error = True
 
@@ -169,8 +170,7 @@ class SignUpPage(Handler):
         if not valid_email(email):
             params['error_email'] = "Invalid email address"
             have_error = True
-
-        if email == query_email(email):
+        elif email == query_email(email):
             params['error_email'] = "This email address is already used"
             have_error = True
 
