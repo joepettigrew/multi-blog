@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="blogs">
+  <div class="container">
+    <article class="single-article">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-9">
+          <div class="row blog-header">
+            <div class="col-12">
+              <h2 class="blog-title">{{blog.title}}</h2>
+              <p class="blog-info">Written by {{blog.username}} on {{blog.created.date()}}</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="blog-content">{{blog.render() | safe}}</div>
+            </div>
+          </div>
+          <div class="row blog-content-footer">
+            <div class="col-12">
+              {% if auth_user and auth_user == blog.username %}
+              <h4 class="footer-title">This is your own post.</h4>
+              <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT THIS POST</a>
+              {% elif auth_user and auth_user != blog.username %}
+              <h4 class="footer-title">You're not the owner, but you're authenticated</h4>
+              <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">LIKE THIS!</a>
+              <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">HATE THIS!</a>
+              {% else %}
+              <h4 class="footer-title">You're not the owner, and you're just a guest to the site.</h4>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

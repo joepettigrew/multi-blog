@@ -279,10 +279,14 @@ class EditPost(Handler):
 
 class DeletePost(Handler):
     def post(self):
+        auth_user = self.username()
         blog_id = self.request.get("bid")
-        blog = Blogs.by_id(blog_id)
-        blog.delete()
-        self.redirect("/welcome")
+        if Blogs.verify_owner(blog_id, auth_user):
+            blog = Blogs.by_id(blog_id)
+            blog.delete()
+            self.redirect("/welcome")
+        else:
+            self.redirect("/welcome")
 
 
 class LogIn(Handler):
@@ -320,11 +324,23 @@ class LogOut(Handler):
         self.logout()
         self.redirect("/")
 
+class SinglePost(Handler):
+    def get(self, blog_id):
+        auth_user = self.username()
+        blog = Blogs.by_id(blog_id)
+
+        if not blog:
+            self.error(404)
+            return
+
+        self.render("singlepost.html", blog = blog, auth_user=auth_user)
+
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
+    ('/([0-9]+)', SinglePost),
     ('/blogsubmit', BlogSubmit),
     ('/edit-post', EditPost),
     ('/delete-post', DeletePost),
