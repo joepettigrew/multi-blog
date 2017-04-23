@@ -193,7 +193,11 @@ class SignUpPage(Handler):
 class WelcomePage(Handler):
     def get(self):
         auth_user = self.username()
-        self.user_page("welcome.html", "/signup", auth_user=auth_user)
+        blogs = db.GqlQuery(
+            "SELECT * FROM Blogs WHERE username = :1 ORDER BY created DESC",
+            auth_user
+        )
+        self.user_page("welcome.html", "/signup", blogs=blogs, auth_user=auth_user)
 
 
 class BlogSubmit(Handler):

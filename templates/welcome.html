@@ -1,7 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Welcome {{auth_user}}</h1>
-<a href="/blogsubmit">Post a blog!</a>
+
+<section class="blogs">
+  <h1 class="text-center pb-4">{{auth_user}}'s blog posts</h1>
+  <div class="container">
+    {% for blog in blogs %}
+    <article class="single-article">
+      <div class="row">
+        <div class="col-12">
+          <div class="row blog-header">
+            <div class="col-12 col-md-8">
+              <h2 class="blog-title">{{blog.title}}</h2>
+            </div>
+            <div class="col-12 col-md-4 text-right">
+              <p class="blog-info">{{blog.username}} | {{blog.created.date()}}</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <p class="blog-content">{{blog.content | safe}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+
+    <div class="row">
+      <div class="col-12 text-center">
+        <p>Want to make a blog post?</p>
+        <a class="btn btn-custom" href="/blogsubmit">Post a blog</a>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 {% endblock %}
