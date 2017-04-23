@@ -111,6 +111,14 @@ a:hover {
   margin:0;
 }
 
+.separator {
+  margin:0 15px;
+}
+
+.btn {
+  border-radius:0;
+}
+
 
 /* Blog Post */
 .blog-text {

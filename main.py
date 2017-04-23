@@ -3,6 +3,7 @@ import re
 import hashlib
 import hmac
 import random
+from string import letters
 
 import jinja2
 import webapp2
@@ -66,6 +67,11 @@ class Handler(webapp2.RequestHandler):
         else:
             self.render(origin_page, **kw)
 
+    # Log out (Deletes cookie)
+    def logout(self):
+        self.response.headers.add_header('Set-Cookie', 'username=; Path=/')
+
+
 # Users entity in Google Datastore
 class Users(db.Model):
     username = db.StringProperty(required = True)
@@ -107,9 +113,29 @@ def valid_email(email):
 
 # Get Username from DB
 def query_username(username):
-    user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username)
-    result = user.get()
-    return result.username
+    user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username).get()
+    return user.username
+
+# Get email from DB
+def query_email(email):
+    user = db.GqlQuery("SELECT * FROM Users WHERE email = :1", email).get()
+    return user.email
+
+# Make salt for password hashing
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+# Make the password hash with salt
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+# Validate the password
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
 
 
 class SignUpPage(Handler):
@@ -129,6 +155,10 @@ class SignUpPage(Handler):
             params['error_username'] = "Invalid username"
             have_error = True
 
+        if username == query_username(username):
+            params['error_username'] = "Same username already exists"
+            have_error = True
+
         if not valid_password(password):
             params['error_password'] = "Invalid password"
             have_error = True
@@ -140,11 +170,18 @@ class SignUpPage(Handler):
             params['error_email'] = "Invalid email address"
             have_error = True
 
+        if email == query_email(email):
+            params['error_email'] = "This email address is already used"
+            have_error = True
+
         if have_error:
             self.render("signup.html", **params)
         else:
+            # Create password hash
+            pass_hash = make_pw_hash(username, password)
+
             # Create user in DB
-            user = Users(username=username, password=password, email=email)
+            user = Users(username=username, password=pass_hash, email=email)
             user.put()
 
             # Create cookie
@@ -189,9 +226,16 @@ class BlogSubmit(Handler):
             self.render("blogsubmit.html", title=title, content=content, error=error, username=username)
 
 
+class LogOut(Handler):
+    def get(self):
+        self.logout()
+        self.redirect("/")
+
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
-    ('/blogsubmit', BlogSubmit)
+    ('/blogsubmit', BlogSubmit),
+    ('/logout', LogOut)
 ], debug=True)
