@@ -1,14 +1,19 @@
 import os
-import re
+
 import hashlib
 import hmac
 import random
 from string import letters
 
+from validate import Validate
+from datastore import Users
+from datastore import Blogs
+from datastore import Interactions
+
 import jinja2
 import webapp2
 
-from google.appengine.ext import db
+
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
@@ -23,6 +28,10 @@ def check_secure_val(secure_val):
     val = secure_val.split("|")[0]
     if secure_val == make_secure_val(val):
         return val
+
+# Make salt for password hashing
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
 
 
 class Handler(webapp2.RequestHandler):
@@ -48,20 +57,16 @@ class Handler(webapp2.RequestHandler):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
-    # Returns the username from cookie
-    def username(self):
-        return self.read_secure_cookie("username")
-
     # Turns away unauthorized users
     def user_page(self, origin_page, alt_page, **kw):
-        if self.username():
+        if self.user:
             self.render(origin_page, **kw)
         else:
             self.redirect(alt_page)
 
     # Turns away authorized users
     def anom_page(self, origin_page, alt_page, **kw):
-        if self.username():
+        if self.user:
             self.redirect(alt_page)
         else:
             self.render(origin_page, **kw)
@@ -70,88 +75,17 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'username=; Path=/')
 
-    def style_content(content):
-        content = content.replace('\n', '<br>')
-        return content
-
-
-# Users entity in Google Datastore
-class Users(db.Model):
-    username = db.StringProperty(required = True)
-    password = db.StringProperty(required = True)
-    email = db.StringProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-
-
-# Blogs entity in Google Datastore
-class Blogs(db.Model):
-    username = db.StringProperty(required = True)
-    title = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    updated = db.DateTimeProperty(auto_now = True)
-    likes = db.IntegerProperty()
-    dislikes = db.IntegerProperty()
-
-    def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return self._render_text
-
-    @classmethod
-    def by_id(cls, uid):
-        return cls.get_by_id(int(uid))
-
-    @classmethod
-    def verify_owner(cls, uid, username):
-        if cls.get_by_id(int(uid)) is not None:
-            owner_name = cls.get_by_id(int(uid)).username
-            return owner_name == username
-
-
-class Interactions(db.Model):
-    username = db.StringProperty()
-    blog_id = db.IntegerProperty()
-    sentiment = db.BooleanProperty()
-    comment = db.TextProperty()
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        auth_user = self.read_secure_cookie('username')
+        self.user = auth_user and Users.by_username(auth_user)
 
 
 class MainPage(Handler):
     def get(self):
-        auth_user = self.username()
-        blogs = db.GqlQuery("SELECT * FROM Blogs ORDER BY created DESC")
-        self.render("index.html", blogs=blogs, auth_user=auth_user)
+        blogs = Blogs.all().order("-created")
+        self.render("index.html", blogs=blogs, auth_user=self.user)
 
-
-# Username validation
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-def valid_username(username):
-    return username and USER_RE.match(username)
-
-# Password validation
-PASS_RE = re.compile(r"^.{3,20}$")
-def valid_password(password):
-    return password and PASS_RE.match(password)
-
-# Email validation
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-def valid_email(email):
-    return not email or EMAIL_RE.match(email)
-
-# Get Username from DB
-def query_username(username):
-    if username:
-        user = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username).get()
-        return user and username
-
-# Get email from DB
-def query_email(email):
-    if email:
-        user = db.GqlQuery("SELECT * FROM Users WHERE email = :1", email).get()
-        return user and user.email
-
-# Make salt for password hashing
-def make_salt(length = 5):
-    return ''.join(random.choice(letters) for x in xrange(length))
 
 # Make the password hash with salt
 def make_pw_hash(name, pw, salt = None):
@@ -179,24 +113,24 @@ class SignUpPage(Handler):
 
         params = dict(username = username, email = email)
 
-        if not valid_username(username):
+        if not Validate(username).username():
             params['error_username'] = "Invalid username"
             have_error = True
-        elif username == query_username(username):
+        elif username == Users.by_username(username):
             params['error_username'] = "Same username already exists"
             have_error = True
 
-        if not valid_password(password):
+        if not Validate(password).password():
             params['error_password'] = "Invalid password"
             have_error = True
         elif password != verify:
             params['error_verify'] = "Passwords didn't match"
             have_error = True
 
-        if not valid_email(email):
+        if not Validate(email).email():
             params['error_email'] = "Invalid email address"
             have_error = True
-        elif email == query_email(email):
+        elif email == Users.by_email(email):
             params['error_email'] = "This email address is already used"
             have_error = True
 
@@ -219,20 +153,17 @@ class SignUpPage(Handler):
 
 class WelcomePage(Handler):
     def get(self):
-        auth_user = self.username()
-        blogs = Blogs.all().filter("username = ", auth_user).order("-created")
-        self.user_page("welcome.html", "/signup", blogs=blogs, auth_user=auth_user)
+        blogs = Blogs.all().filter("username = ", self.user).order("-created")
+        self.user_page("welcome.html", "/signup", blogs=blogs, auth_user=self.user)
 
 
 class BlogSubmit(Handler):
     def get(self):
-        auth_user = self.username()
-        self.user_page("blogsubmit.html", "/signup", auth_user=auth_user)
+        self.user_page("blogsubmit.html", "/signup", auth_user=self.user)
 
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
-        auth_user = self.username()
 
         if title and content:
             # Remove <div> tag from posting
@@ -240,33 +171,24 @@ class BlogSubmit(Handler):
             content = content.replace("</div>", "")
 
             # Add to Blogs entity
-            blog = Blogs(title=title, content=content, username=auth_user, likes=0, dislikes=0)
+            blog = Blogs(title=title, content=content, username=self.user, likes=0, dislikes=0)
             blog.put()
-
-            # Get Blog ID
-            blog = Blogs.all().filter("username", auth_user).order("-created").get()
-            blog_id = blog.key().id()
-
-            # Add to Interactions entity
-            interaction = Interactions(username=auth_user, blog_id=blog_id, comment="")
-            interaction.put()
 
             # Redirect to home page
             self.redirect("/")
         else:
             error = "We need both the title and the blog post."
-            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=auth_user)
+            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=self.user)
 
 
 class EditPost(Handler):
     def get(self):
-        auth_user = self.username()
         blog_id = self.request.get("bid")
-        if Blogs.verify_owner(blog_id, auth_user):
+        if Blogs.verify_owner(blog_id, self.user):
             blog = Blogs.by_id(blog_id)
             title = blog.title
             content = blog.content
-            self.user_page("editpost.html", "/signup", auth_user=auth_user, title=title, content=content, blog_id = blog_id)
+            self.user_page("editpost.html", "/signup", auth_user=self.user, title=title, content=content, blog_id = blog_id)
         else:
             self.redirect("/welcome")
 
@@ -274,7 +196,6 @@ class EditPost(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
         blog_id = self.request.get("bid")
-        auth_user = self.username()
 
         if title and content:
             # Remove <div> tag from posting
@@ -291,14 +212,13 @@ class EditPost(Handler):
             self.redirect("/welcome")
         else:
             error = "We need both the title and the blog post."
-            self.render("editpost.html", title=title, content=content, error=error, blog_id = blog_id, auth_user=auth_user)
+            self.render("editpost.html", title=title, content=content, error=error, blog_id = blog_id, auth_user=self.user)
 
 
 class DeletePost(Handler):
     def post(self):
-        auth_user = self.username()
         blog_id = self.request.get("bid")
-        if Blogs.verify_owner(blog_id, auth_user):
+        if Blogs.verify_owner(blog_id, self.user):
             blog = Blogs.by_id(blog_id)
             blog.delete()
             self.redirect("/welcome")
@@ -330,7 +250,7 @@ class LogIn(Handler):
 
 
     def valid_cred(self, username, password, pass_hash=""):
-        query = db.GqlQuery("SELECT * FROM Users WHERE username = :1", username).get()
+        query = Users.all().filter("username", username).get()
         if query is not None:
             pass_hash = query.password
         return username and password and valid_pw(username, password, pass_hash)
@@ -344,26 +264,24 @@ class LogOut(Handler):
 
 class SinglePost(Handler):
     def get(self, blog_id):
-        auth_user = self.username()
         blog = Blogs.by_id(blog_id)
-        interactions = Interactions.all().filter("username = ", auth_user).filter("blog_id =", int(blog_id)).get()
+        interactions = Interactions.all().filter("username = ", self.user).filter("blog_id =", int(blog_id)).get()
 
         if not blog:
             self.error(404)
             return
 
-        self.render("singlepost.html", blog=blog, interactions=interactions, auth_user=auth_user)
+        self.render("singlepost.html", blog=blog, interactions=interactions, auth_user=self.user)
 
 
 class LikePost(Handler):
     def get(self):
-        auth_user = self.username()
         blog_id = int(self.request.get("bid"))
 
         # Check to see if the user has interacted with this post before.
-        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id).get()
+        q = Interactions.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
         if q is None:
-            interaction = Interactions(username=auth_user, blog_id=blog_id, sentiment=True)
+            interaction = Interactions(username=self.user, blog_id=blog_id, sentiment=True)
             interaction.put()
 
             # Update the Datastore
@@ -376,13 +294,12 @@ class LikePost(Handler):
 
 class DislikePost(Handler):
     def get(self):
-        auth_user = self.username()
         blog_id = int(self.request.get("bid"))
 
         # Check to see if the user has interacted with this post before.
-        q = Interactions.all().filter("username = ", auth_user).filter("blog_id = ", blog_id).get()
+        q = Interactions.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
         if q is None:
-            interaction = Interactions(username=auth_user, blog_id=blog_id, sentiment=False)
+            interaction = Interactions(username=self.user, blog_id=blog_id, sentiment=False)
             interaction.put()
 
             # Update the Datastore
