@@ -279,7 +279,7 @@ class SinglePost(Handler):
     def get(self, blog_id):
         blog = Blogs.by_id(blog_id)
         sentiment = Sentiment.all().filter("username = ", self.user).filter("blog_id =", int(blog_id)).get()
-        comments = Comments.all()
+        comments = Comments.all().filter("blog_id = ", int(blog_id))
 
         if not blog:
             self.error(404)

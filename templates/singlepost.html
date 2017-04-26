@@ -9,19 +9,19 @@
           <div class="row blog-header">
             <div class="col-12">
               <h2 class="blog-title">{{blog.title}}</h2>
-              <p class="blog-info">Written by {{blog.username}} on {{blog.created.date()}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
+              <p class="blog-info">Written by {{blog.username}} on {{blog.created.strftime("%m/%d/%Y")}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
             </div>
           </div>
-          <div class="row">
+          <div class="row blog-content">
             <div class="col-12">
-              <div class="blog-content">{{blog.render() | safe}}</div>
+              <div>{{blog.render() | safe}}</div>
             </div>
           </div>
           <div class="row comment-row">
             {% for comment in comments %}
             <div class="col-12 comment-box">
               <p class="comment-text">{{comment.comment}}</p>
-              <p class="comment-meta">{{comment.username}} on {{comment.updated.date()}}</p>
+              <p class="comment-meta">{{comment.username}} on {{comment.updated.strftime("%m/%d/%Y")}}</p>
             </div>
             {% endfor %}
           </div>
