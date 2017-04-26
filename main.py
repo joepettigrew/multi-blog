@@ -1,19 +1,18 @@
 import os
-
 import hashlib
 import hmac
 import random
 from string import letters
 
+# My files
 from validate import Validate
 from datastore import Users
 from datastore import Blogs
-from datastore import Interactions
+from datastore import Sentiment
+from datastore import Comments
 
 import jinja2
 import webapp2
-
-
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
@@ -153,8 +152,10 @@ class SignUpPage(Handler):
 
 class WelcomePage(Handler):
     def get(self):
-        blogs = Blogs.all().filter("username = ", self.user).order("-created")
-        self.user_page("welcome.html", "/signup", blogs=blogs, auth_user=self.user)
+        params = dict(auth_user=self.user)
+        params['blogs'] = Blogs.all().filter("username = ",
+                                             self.user).order("-created")
+        self.user_page("welcome.html", "/signup", **params)
 
 
 class BlogSubmit(Handler):
@@ -165,34 +166,43 @@ class BlogSubmit(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
+        params = dict(auth_user=self.user, title=title, content=content)
+
         if title and content:
             # Remove <div> tag from posting
             content = content.replace("<div>", "")
             content = content.replace("</div>", "")
 
             # Add to Blogs entity
-            blog = Blogs(title=title, content=content, username=self.user, likes=0, dislikes=0)
+            blog = Blogs(title=title,
+                         content=content,
+                         username=self.user,
+                         likes=0,
+                         dislikes=0)
             blog.put()
 
             # Redirect to home page
-            self.redirect("/")
+            self.redirect("/welcome")
         else:
-            error = "We need both the title and the blog post."
-            self.render("blogsubmit.html", title=title, content=content, error=error, auth_user=self.user)
+            params['error'] = "We need both the title and the blog post."
+            self.render("blogsubmit.html", **params)
 
 
 class EditPost(Handler):
     def get(self):
+        params = dict(auth_user=self.user)
         blog_id = self.request.get("bid")
         if Blogs.verify_owner(blog_id, self.user):
             blog = Blogs.by_id(blog_id)
-            title = blog.title
-            content = blog.content
-            self.user_page("editpost.html", "/signup", auth_user=self.user, title=title, content=content, blog_id = blog_id)
+            params['blog_id'] = blog_id
+            params['title'] = blog.title
+            params['content'] = blog.content
+            self.user_page("editpost.html", "/signup", **params)
         else:
             self.redirect("/welcome")
 
     def post(self):
+        params = dict(auth_user=self.user)
         title = self.request.get("title")
         content = self.request.get("content")
         blog_id = self.request.get("bid")
@@ -211,8 +221,11 @@ class EditPost(Handler):
             # Redirect to home page
             self.redirect("/welcome")
         else:
-            error = "We need both the title and the blog post."
-            self.render("editpost.html", title=title, content=content, error=error, blog_id = blog_id, auth_user=self.user)
+            params['title'] = title
+            params['content'] = content
+            params['blog_id'] = blog_id
+            params['error'] = "We need both the title and the blog post."
+            self.render("editpost.html", **params)
 
 
 class DeletePost(Handler):
@@ -265,13 +278,14 @@ class LogOut(Handler):
 class SinglePost(Handler):
     def get(self, blog_id):
         blog = Blogs.by_id(blog_id)
-        interactions = Interactions.all().filter("username = ", self.user).filter("blog_id =", int(blog_id)).get()
+        sentiment = Sentiment.all().filter("username = ", self.user).filter("blog_id =", int(blog_id)).get()
+        comments = Comments.all()
 
         if not blog:
             self.error(404)
             return
 
-        self.render("singlepost.html", blog=blog, interactions=interactions, auth_user=self.user)
+        self.render("singlepost.html", blog=blog, sentiment=sentiment, auth_user=self.user, comments=comments)
 
 
 class LikePost(Handler):
@@ -279,10 +293,10 @@ class LikePost(Handler):
         blog_id = int(self.request.get("bid"))
 
         # Check to see if the user has interacted with this post before.
-        q = Interactions.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
+        q = Sentiment.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
         if q is None:
-            interaction = Interactions(username=self.user, blog_id=blog_id, sentiment=True)
-            interaction.put()
+            sentiment = Sentiment(username=self.user, blog_id=blog_id, sentiment=True)
+            sentiment.put()
 
             # Update the Datastore
             blog = Blogs.by_id(blog_id)
@@ -297,15 +311,26 @@ class DislikePost(Handler):
         blog_id = int(self.request.get("bid"))
 
         # Check to see if the user has interacted with this post before.
-        q = Interactions.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
+        q = Sentiment.all().filter("username = ", self.user).filter("blog_id = ", blog_id).get()
         if q is None:
-            interaction = Interactions(username=self.user, blog_id=blog_id, sentiment=False)
-            interaction.put()
+            sentiment = Sentiment(username=self.user, blog_id=blog_id, sentiment=False)
+            sentiment.put()
 
             # Update the Datastore
             blog = Blogs.by_id(blog_id)
             blog.dislikes += 1
             blog.put()
+
+        self.redirect("/%s" % blog_id)
+
+
+class PostComment(Handler):
+    def post(self):
+        blog_id = int(self.request.get("bid"))
+        comment = self.request.get("comment")
+
+        comment = Comments(blog_id=blog_id, comment=comment, username=self.user)
+        comment.put()
 
         self.redirect("/%s" % blog_id)
 
@@ -320,6 +345,7 @@ app = webapp2.WSGIApplication([
     ('/delete-post', DeletePost),
     ('/like-post', LikePost),
     ('/dislike-post', DislikePost),
+    ('/post-comment', PostComment),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)

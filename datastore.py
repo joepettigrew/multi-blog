@@ -44,8 +44,15 @@ class Blogs(db.Model):
             return owner_name == username
 
 # Interactions entity in Google Datstore
-class Interactions(db.Model):
+class Sentiment(db.Model):
     username = db.StringProperty()
     blog_id = db.IntegerProperty()
     sentiment = db.BooleanProperty()
-    comment = db.TextProperty()
+
+
+class Comments(db.Model):
+    username = db.StringProperty(required = True)
+    blog_id = db.IntegerProperty(required = True)
+    comment = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    updated = db.DateTimeProperty(auto_now = True)

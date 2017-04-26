@@ -17,19 +17,39 @@
               <div class="blog-content">{{blog.render() | safe}}</div>
             </div>
           </div>
-          <div class="row blog-content-footer">
+          <div class="row comment-row">
+            {% for comment in comments %}
+            <div class="col-12 comment-box">
+              <p class="comment-text">{{comment.comment}}</p>
+              <p class="comment-meta">{{comment.username}} on {{comment.updated.date()}}</p>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="row post-row">
+            <div class="col-12">
+              <form class="comment-form" action="/post-comment" method="post">
+                <div class="form-group">
+                  <label for="comment">Comment on this post</label>
+                  <textarea class="form-control" id="comment" name="comment"></textarea>
+                </div>
+                <input type="hidden" name="bid" value="{{blog.key().id()}}">
+                <input type="submit" name="submit" value="SUBMIT" class="btn btn-custom">
+              </form>
+            </div>
+          </div>
+          <div class="row post-row">
             <div class="col-12">
               {% if auth_user and auth_user == blog.username %}
               <h4 class="footer-title">This is your own post.</h4>
               <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT THIS POST</a>
               {% elif auth_user and auth_user != blog.username %}
               <h4 class="footer-title">You're not the owner, but you're authenticated</h4>
-                {% if interactions.sentiment %}
+                {% if sentiment.sentiment %}
                 <p>You already liked this post</p>
-                {% elif interactions.sentiment == False %}
+                {% elif sentiment.sentiment == False %}
                 <p>You already disliked this post</p>
                 {% endif %}
-                {% if not interactions.username %}
+                {% if not sentiment.username %}
                 <a class="btn btn-custom" href="/like-post?bid={{blog.key().id()}}">LIKE THIS!</a>
                 <a class="btn btn-custom" href="/dislike-post?bid={{blog.key().id()}}">HATE THIS!</a>
                 {% endif %}
