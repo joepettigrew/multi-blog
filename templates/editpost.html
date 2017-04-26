@@ -28,8 +28,10 @@
           <div class="form-group row justify-content-center">
             <div class="col-sm-10 col-lg-7 offset-sm-2">
               <button type="submit" class="btn btn-custom">SUBMIT</button>
-              <span class="separator">OR</span>
+              <span class="separator"></span>
               <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delete">DELETE</button>
+              <span class="separator">OR</span>
+              <a href="/welcome">Cancel</a>
             </div>
           </div>
         </form>
@@ -53,7 +55,7 @@
       <div class="modal-footer">
         <form method="post" action="/delete-post">
           <input type="hidden" name="bid" value="{{blog_id}}">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Nevermind</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">NEVERMIND</button>
           <button type="submit" class="btn btn-danger">I'm sure. DELETE!</button>
         </form>
       </div>
