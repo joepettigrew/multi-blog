@@ -348,6 +348,17 @@ class EditComment(Handler):
         self.redirect("/%s" % blog_id)
 
 
+class DeleteComment(Handler):
+    def post(self):
+        comment_id = int(self.request.get("cid"))
+
+        comment = Comments.by_id(comment_id)
+        blog_id = comment.blog_id
+        comment.delete()
+
+        self.redirect("/%s" % blog_id)
+
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
@@ -360,6 +371,7 @@ app = webapp2.WSGIApplication([
     ('/dislike-post', DislikePost),
     ('/post-comment', PostComment),
     ('/edit-comment', EditComment),
+    ('/delete-comment', DeleteComment),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)
