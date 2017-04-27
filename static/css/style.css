@@ -120,12 +120,11 @@ a:hover {
   color: #888;
 }
 
-.blog-content {
+.blog-content,
+.single-blog-content {
   line-height: 1.8;
   color: #555;
   font-size: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 30px;
 }
 
 .post-divider {
@@ -177,8 +176,13 @@ a:hover {
   padding:20px 0;
 }
 
-.comment-row {
-  
+.single-blog-content {
+  padding-bottom: 30px;
+}
+
+.comment-header {
+  padding: 30px 0 10px 0;
+  border-bottom: 1px solid #eee;
 }
 
 .comment-box {
@@ -196,6 +200,22 @@ a:hover {
   color: #999;
 }
 
+.comment-area {
+  height: 120px;
+}
+
+.sub-action {
+  font-size: 12px;
+  color: #2fafe1;
+}
+
+.sub-action:hover {
+  text-decoration: underline;
+}
+
+.navbar {
+  color: #fff;
+}
 
 /* Footer */
 .footer-nav {

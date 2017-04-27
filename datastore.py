@@ -56,3 +56,7 @@ class Comments(db.Model):
     comment = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     updated = db.DateTimeProperty(auto_now = True)
+
+    @classmethod
+    def by_id(cls, uid):
+        return cls.get_by_id(int(uid))

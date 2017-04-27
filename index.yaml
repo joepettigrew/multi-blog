@@ -20,3 +20,8 @@ indexes:
   - name: username
   - name: created
     direction: desc
+
+- kind: Comments
+  properties:
+  - name: blog_id
+  - name: created

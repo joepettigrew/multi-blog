@@ -279,7 +279,7 @@ class SinglePost(Handler):
     def get(self, blog_id):
         blog = Blogs.by_id(blog_id)
         sentiment = Sentiment.all().filter("username = ", self.user).filter("blog_id =", int(blog_id)).get()
-        comments = Comments.all().filter("blog_id = ", int(blog_id))
+        comments = Comments.all().filter("blog_id = ", int(blog_id)).order("created")
 
         if not blog:
             self.error(404)
@@ -335,6 +335,19 @@ class PostComment(Handler):
         self.redirect("/%s" % blog_id)
 
 
+class EditComment(Handler):
+    def post(self):
+        comment_id = int(self.request.get("cid"))
+        comment_text = self.request.get("comment")
+
+        comment = Comments.by_id(comment_id)
+        comment.comment = comment_text
+        blog_id = comment.blog_id
+        comment.put()
+
+        self.redirect("/%s" % blog_id)
+
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
@@ -346,6 +359,7 @@ app = webapp2.WSGIApplication([
     ('/like-post', LikePost),
     ('/dislike-post', DislikePost),
     ('/post-comment', PostComment),
+    ('/edit-comment', EditComment),
     ('/login', LogIn),
     ('/logout', LogOut)
 ], debug=True)

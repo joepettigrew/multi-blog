@@ -9,12 +9,17 @@
           <div class="row blog-header">
             <div class="col-12">
               <h2 class="blog-title">{{blog.title}}</h2>
-              <p class="blog-info">Written by {{blog.username}} on {{blog.created.strftime("%m/%d/%Y")}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
+              <p class="blog-info">Written by {{blog.username}} on {{blog.created.strftime("%m/%d/%Y")}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}} // Comments: {{comments.count()}}</p>
             </div>
           </div>
-          <div class="row blog-content">
+          <div class="row single-blog-content">
             <div class="col-12">
               <div>{{blog.render() | safe}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <h4 class="comment-header">{{comments.count()}} Comments</h4>
             </div>
           </div>
           <div class="row comment-row">
@@ -22,45 +27,84 @@
             <div class="col-12 comment-box">
               <p class="comment-text">{{comment.comment}}</p>
               <p class="comment-meta">{{comment.username}} on {{comment.updated.strftime("%m/%d/%Y")}}</p>
+              {% if comment.username == auth_user %}
+              <p>
+                <a class="sub-action" href="#" data-toggle="modal" data-target="#{{comment.key().id()}}">Edit</a>
+                <span class="separator"><small>|</small></span>
+                <a class="sub-action" href="#">Delete</a>
+              </p>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
+          {% if auth_user %}
           <div class="row post-row">
             <div class="col-12">
               <form class="comment-form" action="/post-comment" method="post">
                 <div class="form-group">
                   <label for="comment">Comment on this post</label>
-                  <textarea class="form-control" id="comment" name="comment"></textarea>
+                  <textarea class="form-control comment-area" id="comment" name="comment"></textarea>
                 </div>
                 <input type="hidden" name="bid" value="{{blog.key().id()}}">
                 <input type="submit" name="submit" value="SUBMIT" class="btn btn-custom">
               </form>
             </div>
           </div>
-          <div class="row post-row">
-            <div class="col-12">
-              {% if auth_user and auth_user == blog.username %}
-              <h4 class="footer-title">This is your own post.</h4>
-              <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT THIS POST</a>
-              {% elif auth_user and auth_user != blog.username %}
-              <h4 class="footer-title">You're not the owner, but you're authenticated</h4>
-                {% if sentiment.sentiment %}
-                <p>You already liked this post</p>
-                {% elif sentiment.sentiment == False %}
-                <p>You already disliked this post</p>
-                {% endif %}
-                {% if not sentiment.username %}
-                <a class="btn btn-custom" href="/like-post?bid={{blog.key().id()}}">LIKE THIS!</a>
-                <a class="btn btn-custom" href="/dislike-post?bid={{blog.key().id()}}">HATE THIS!</a>
-                {% endif %}
-              {% else %}
-              <h4 class="footer-title">You're not the owner, and you're just a guest to the site.</h4>
-              {% endif %}
-            </div>
-          </div>
+          {% endif %}
         </div>
       </div>
     </article>
   </div>
 </section>
+<nav class="navbar fixed-bottom navbar-light bg-inverse">
+  {% if auth_user and auth_user == blog.username %}
+  <a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT THIS POST</a>
+  {% elif auth_user and auth_user != blog.username %}
+    {% if sentiment.sentiment %}
+    <span class="text-center">You already liked this post</span>
+    {% elif sentiment.sentiment == False %}
+    <span class="text-center">You already disliked this post</span>
+    {% endif %}
+    {% if not sentiment.username %}
+    <div class="row no-gutters">
+      <div class="col">
+        <a class="btn btn-custom w-100" href="/like-post?bid={{blog.key().id()}}">LIKE THIS!</a>
+      </div>
+      <div class="col">
+        <a class="btn btn-danger w-100" href="/dislike-post?bid={{blog.key().id()}}">HATE THIS!</a>
+      </div>
+    </div>
+    {% endif %}
+  {% else %}
+  <h4 class="footer-title">You're not the owner, and you're just a guest to the site.</h4>
+  {% endif %}
+</nav>
+<!-- Modal -->
+{% for comment in comments %}
+{% if comment.username == auth_user %}
+<div class="modal fade" id="{{comment.key().id()}}" tabindex="-1" role="dialog" aria-labelledby="editLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="post" action="/edit-comment">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editLabel">Edit this comment</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <textarea class="form-control comment-area" id="comment" name="comment">{{comment.comment}}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name="cid" value="{{comment.key().id()}}">
+          <button type="submit" class="btn btn-custom">SUBMIT</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
 {% endblock %}
