@@ -25,7 +25,7 @@
           <div class="row blog-header">
             <div class="col-12">
               <h2 class="blog-title"><a href="/{{blog.key().id()}}">{{blog.title}}</a></h2>
-              <p class="blog-info">By {{blog.username}} // {{blog.created.date()}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
+              <p class="blog-info">By {{blog.username}} // {{blog.created.strftime("%m/%d/%Y")}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
             </div>
           </div>
           <div class="row mb-5">
