@@ -17,7 +17,7 @@
               <div>{{blog.render() | safe}}</div>
             </div>
           </div>
-          <div class="row">
+          <div class="row" id="Comments">
             <div class="col-12">
               <h4 class="comment-header">{{comments.count()}} Comments</h4>
             </div>
@@ -40,10 +40,11 @@
           {% if auth_user %}
           <div class="row post-row">
             <div class="col-12">
-              <form class="comment-form" action="/post-comment" method="post">
+              <form class="comment-form" action="" method="post">
                 <div class="form-group">
                   <label for="comment">Comment on this post</label>
                   <textarea class="form-control comment-area" id="comment" name="comment"></textarea>
+                  <p class="error"><small>{{error_comment}}</small></p>
                 </div>
                 <input type="hidden" name="bid" value="{{blog.key().id()}}">
                 <input type="submit" name="submit" value="SUBMIT" class="btn btn-custom">
