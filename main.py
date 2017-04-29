@@ -154,7 +154,7 @@ class LogIn(Handler):
 class LogOut(Handler):
     def get(self):
         self.logout()
-        self.redirect("/")
+        self.redirect("/signup")
 
 
 class WelcomePage(Handler):
