@@ -20,16 +20,19 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
 
 secret = "lkasdjf$j89u_345n45e-jtgdf8^459u23asd"
 
+
 def make_secure_val(val):
     return "%s|%s" % (val, hmac.new(secret, val).hexdigest())
+
 
 def check_secure_val(secure_val):
     val = secure_val.split("|")[0]
     if secure_val == make_secure_val(val):
         return val
 
+
 # Make salt for password hashing
-def make_salt(length = 5):
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
 
@@ -87,11 +90,12 @@ class MainPage(Handler):
 
 
 # Make the password hash with salt
-def make_pw_hash(name, pw, salt = None):
+def make_pw_hash(name, pw, salt=None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (salt, h)
+
 
 # Validate the password
 def valid_pw(name, password, h):
@@ -110,7 +114,7 @@ class SignUpPage(Handler):
         verify = self.request.get("verify")
         email = self.request.get("email")
 
-        params = dict(username = username, email = email)
+        params = dict(username=username, email=email)
 
         if not Validate(username).username():
             params['error_username'] = "Invalid username"
@@ -261,12 +265,13 @@ class LogIn(Handler):
             params['error_msg'] = "Invalid username or password"
             self.render("login.html", **params)
 
-
     def valid_cred(self, username, password, pass_hash=""):
         query = Users.all().filter("username", username).get()
         if query is not None:
             pass_hash = query.password
-        return username and password and valid_pw(username, password, pass_hash)
+        return username and password and valid_pw(username,
+                                                  password,
+                                                  pass_hash)
 
 
 class LogOut(Handler):

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if not auth_user %}
 <section class="hero">
   <div class="container">
     <div class="row text-center">
@@ -14,6 +15,7 @@
     </div>
   </div>
 </section>
+{% endif %}
 <section class="blogs">
   <div class="container">
     {% for blog in blogs %}
@@ -23,7 +25,7 @@
           <div class="row blog-header">
             <div class="col-12">
               <h2 class="blog-title"><a href="/{{blog.key().id()}}">{{blog.title}}</a></h2>
-              <p class="blog-info">By {{blog.username}} / On {{blog.created.date()}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
+              <p class="blog-info">By {{blog.username}} // {{blog.created.date()}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
             </div>
           </div>
           <div class="row mb-5">
