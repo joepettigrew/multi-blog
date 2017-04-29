@@ -12,6 +12,9 @@ INSTRUCTION
 ----------------
 main.py is the main handler for this app. All settings must be included in app.yaml file in order for Google App Engine to recognize & execute your app. Therefore the root domain should execute main.py automatically provided you're running within Google App Engine environment.
 
+Live site can be seen at:
+[https://joepettigrew-multi-blog.appspot.com/](https://joepettigrew-multi-blog.appspot.com/)
+
 
 FILE STRUCTURE
 ----------------
