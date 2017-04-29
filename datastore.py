@@ -57,6 +57,7 @@ class Sentiment(db.Model):
         return sentiment
 
 
+# Comments entity in Google Datastore
 class Comments(db.Model):
     username = db.StringProperty(required=True)
     blog_id = db.IntegerProperty(required=True)
