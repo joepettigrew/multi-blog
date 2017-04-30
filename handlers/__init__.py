@@ -1,5 +1,6 @@
 from handler import Handler
 from validate import Validate
+from util import *
 from mainpage import MainPage
 from welcomepage import WelcomePage
 from signup import SignUpPage

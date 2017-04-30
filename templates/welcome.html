@@ -30,7 +30,7 @@
           <td><a href="/post/{{blog.key().id()}}">{{blog.title}}</a></td>
           <td>{{blog.likes}}</td>
           <td>{{blog.dislikes}}</td>
-          <td><a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT</a></td>
+          <td><a class="btn btn-custom" href="/edit-post/{{blog.key().id()}}">EDIT</a></td>
         </tr>
         {% endfor %}
       </tbody>

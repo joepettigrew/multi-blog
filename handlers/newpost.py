@@ -6,6 +6,7 @@ class NewPost(Handler):
         self.user_page("blogsubmit.html", "/signup", auth_user=self.user)
 
     def post(self):
+        # Check user's auth status
         if self.user:
             title = self.request.get("title")
             content = self.request.get("content")

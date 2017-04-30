@@ -1,10 +1,9 @@
-from handler import Handler
-from models import Users
-from models import Blogs
-from models import Sentiment
-from models import Comments
+from handlers import Handler
+from models import Users, Blogs, Sentiment, Comments
+from util import post_exists_wrap
 
 class SinglePost(Handler):
+    @post_exists_wrap
     def get(self, blog_id):
         blog = Blogs.by_id(blog_id)
         sentiment = Sentiment.by_owner(self.user, blog_id)
@@ -21,6 +20,7 @@ class SinglePost(Handler):
 
         self.render("singlepost.html", **params)
 
+    @post_exists_wrap
     def post(self, blog_id):
         blog_id = int(self.request.get("bid"))
         comment = self.request.get("comment")

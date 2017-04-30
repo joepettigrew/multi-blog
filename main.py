@@ -21,7 +21,7 @@ app = webapp2.WSGIApplication([
     ('/welcome', WelcomePage),
     ('/post/([0-9]+)', SinglePost),
     ('/new-post', NewPost),
-    ('/edit-post', EditPost),
+    ('/edit-post/([0-9]+)', EditPost),
     ('/delete-post', DeletePost),
     ('/like-post', LikePost),
     ('/dislike-post', DislikePost),

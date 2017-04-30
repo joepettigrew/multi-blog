@@ -1,6 +1,7 @@
 from handlers import Handler
 from models import Blogs
 
+
 class WelcomePage(Handler):
     def get(self):
         params = dict(auth_user=self.user)

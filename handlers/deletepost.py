@@ -1,5 +1,7 @@
 from handler import Handler
 from models import Blogs
+from util import post_exists
+
 
 class DeletePost(Handler):
     def get(self):
@@ -7,9 +9,13 @@ class DeletePost(Handler):
 
     def post(self):
         blog_id = self.request.get("bid")
-        if Blogs.verify_owner(blog_id, self.user):
-            blog = Blogs.by_id(blog_id)
-            blog.delete()
-            self.redirect("/welcome")
-        else:
-            self.redirect("/welcome")
+
+        # Check to see if post exists
+        if post_exists(blog_id):
+
+            # Check post ownership and auth status
+            if self.user and Blogs.verify_owner(blog_id, self.user):
+                blog = Blogs.by_id(blog_id)
+                blog.delete()
+
+        self.redirect("/welcome")

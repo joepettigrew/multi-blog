@@ -1,22 +1,25 @@
 from handler import Handler
-from models import Sentiment
-from models import Blogs
+from models import Sentiment, Blogs
+from util import post_exists
+
 
 class LikePost(Handler):
     def get(self):
         blog_id = int(self.request.get("bid"))
 
-        # Check to see if the user has interacted with this post before.
-        sentiment = Sentiment.by_owner(self.user, blog_id)
-        if sentiment is None:
-            sentiment = Sentiment(username=self.user,
-                                  blog_id=blog_id,
-                                  sentiment=True)
-            sentiment.put()
+        # Check user's auth status
+        if self.user and post_exists(blog_id):
+            # Check to see if the user has interacted with this post before.
+            sentiment = Sentiment.by_owner(self.user, blog_id)
+            if sentiment is None:
+                sentiment = Sentiment(username=self.user,
+                                      blog_id=blog_id,
+                                      sentiment=True)
+                sentiment.put()
 
-            # Update the Datastore
-            blog = Blogs.by_id(blog_id)
-            blog.likes += 1
-            blog.put()
+                # Update the Datastore
+                blog = Blogs.by_id(blog_id)
+                blog.likes += 1
+                blog.put()
 
         self.redirect("/post/%s" % blog_id)

@@ -3,6 +3,7 @@ from handlers import Validate
 from models import Users
 import auth
 
+
 class SignUpPage(Handler):
     def get(self):
         self.anom_page("signup.html", "/welcome")

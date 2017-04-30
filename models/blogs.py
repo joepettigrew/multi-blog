@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 
+
 # Blogs entity in Google Datastore
 class Blogs(db.Model):
     username = db.StringProperty(required=True)

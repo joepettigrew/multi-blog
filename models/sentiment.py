@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 
+
 # Interactions entity in Google Datstore
 class Sentiment(db.Model):
     username = db.StringProperty()

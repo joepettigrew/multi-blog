@@ -1,8 +1,6 @@
 from handler import Handler
-from models import Users
 from models import Blogs
-from models import Sentiment
-from models import Comments
+
 
 class MainPage(Handler):
     def get(self):

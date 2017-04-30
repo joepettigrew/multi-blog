@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 
+
 # Comments entity in Google Datastore
 class Comments(db.Model):
     username = db.StringProperty(required=True)
