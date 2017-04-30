@@ -19,4 +19,4 @@ class LikePost(Handler):
             blog.likes += 1
             blog.put()
 
-        self.redirect("/%s" % blog_id)
+        self.redirect("/post/%s" % blog_id)

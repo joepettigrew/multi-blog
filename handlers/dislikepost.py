@@ -19,4 +19,4 @@ class DislikePost(Handler):
             blog.dislikes += 1
             blog.put()
 
-        self.redirect("/%s" % blog_id)
+        self.redirect("/post/%s" % blog_id)

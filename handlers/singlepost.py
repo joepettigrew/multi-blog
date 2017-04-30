@@ -42,4 +42,4 @@ class SinglePost(Handler):
                                comment=comment,
                                username=self.user)
             comment.put()
-            self.redirect("/%s#Comments" % blog_id)
+            self.redirect("/post/%s#Comments" % blog_id)

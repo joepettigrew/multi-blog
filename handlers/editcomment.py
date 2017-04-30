@@ -16,4 +16,4 @@ class EditComment(Handler):
             comment.comment = comment_text
             comment.put()
 
-        self.redirect("/%s" % blog_id)
+        self.redirect("/post/%s" % blog_id)

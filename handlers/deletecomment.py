@@ -13,4 +13,4 @@ class DeleteComment(Handler):
         if comment and comment.username == self.user:
             comment.delete()
 
-        self.redirect("/%s" % blog_id)
+        self.redirect("/post/%s" % blog_id)

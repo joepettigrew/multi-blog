@@ -1,5 +1,4 @@
 # My files
-from handlers import Handler
 from handlers import MainPage
 from handlers import WelcomePage
 from handlers import SignUpPage
@@ -20,8 +19,8 @@ app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
-    ('/([0-9]+)', SinglePost),
-    ('/blogsubmit', NewPost),
+    ('/post/([0-9]+)', SinglePost),
+    ('/new-post', NewPost),
     ('/edit-post', EditPost),
     ('/delete-post', DeletePost),
     ('/like-post', LikePost),

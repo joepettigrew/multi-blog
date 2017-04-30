@@ -24,7 +24,7 @@
         <div class="col-12 col-lg-10">
           <div class="row blog-header">
             <div class="col-12">
-              <h2 class="blog-title"><a href="/{{blog.key().id()}}">{{blog.title}}</a></h2>
+              <h2 class="blog-title"><a href="/post/{{blog.key().id()}}">{{blog.title}}</a></h2>
               <p class="blog-info">By {{blog.username}} // {{blog.created.strftime("%m/%d/%Y")}}  // Likes: {{blog.likes}} //  Dislikes: {{blog.dislikes}}</p>
             </div>
           </div>
@@ -35,7 +35,7 @@
           </div>
           <div class="row">
             <div class="col-12">
-              <a class="btn btn-custom" href="/{{blog.key().id()}}">READ MORE</a>
+              <a class="btn btn-custom" href="/post/{{blog.key().id()}}">READ MORE</a>
             </div>
           </div>
         </div>

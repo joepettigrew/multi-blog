@@ -8,7 +8,7 @@
     <div class="row mb-5">
       <div class="col-12 text-center">
         <p>Want to make a blog post?</p>
-        <a class="btn btn-custom" href="/blogsubmit">NEW POST</a>
+        <a class="btn btn-custom" href="/new-post">NEW POST</a>
       </div>
     </div>
     <table class="table table-hover">
@@ -27,7 +27,7 @@
         <tr>
           <th scope="row">{{blog.created.strftime("%m/%d/%Y")}}</th>
           <td>{{blog.updated.strftime("%m/%d/%Y")}}</td>
-          <td><a href="/{{blog.key().id()}}">{{blog.title}}</a></td>
+          <td><a href="/post/{{blog.key().id()}}">{{blog.title}}</a></td>
           <td>{{blog.likes}}</td>
           <td>{{blog.dislikes}}</td>
           <td><a class="btn btn-custom" href="/edit-post?bid={{blog.key().id()}}">EDIT</a></td>
