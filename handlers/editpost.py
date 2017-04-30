@@ -4,6 +4,7 @@ from util import post_exists_wrap
 
 
 class EditPost(Handler):
+    """Edits posts for auth uers"""
     @post_exists_wrap
     def get(self, blog_id):
         params = dict(auth_user=self.user)

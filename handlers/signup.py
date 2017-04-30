@@ -5,6 +5,7 @@ import auth
 
 
 class SignUpPage(Handler):
+    """Registers user to the site"""
     def get(self):
         self.anom_page("signup.html", "/welcome")
 

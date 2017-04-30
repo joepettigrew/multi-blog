@@ -4,6 +4,7 @@ from models import Users
 
 
 class SignIn(Handler):
+    """Signs in user after checking some hash"""
     def get(self):
         self.anom_page("login.html", "/welcome")
 

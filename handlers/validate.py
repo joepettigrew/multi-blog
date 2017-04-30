@@ -6,6 +6,7 @@ EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
 
 class Validate:
+    """Validates inputs for username, password, and email"""
     def __init__(self, string):
         self.string = string
 

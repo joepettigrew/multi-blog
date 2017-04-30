@@ -4,6 +4,7 @@ from util import comment_exists
 
 
 class DeleteComment(Handler):
+    """Deletes comments for auth users"""
     def get(self):
         self.error(404)
 

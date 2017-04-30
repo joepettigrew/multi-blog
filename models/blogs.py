@@ -1,8 +1,8 @@
 from google.appengine.ext import db
 
 
-# Blogs entity in Google Datastore
 class Blogs(db.Model):
+    """ Blogs entity in Google Datastore"""
     username = db.StringProperty(required=True)
     title = db.StringProperty(required=True)
     content = db.TextProperty(required=True)

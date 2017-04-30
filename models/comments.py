@@ -1,8 +1,8 @@
 from google.appengine.ext import db
 
 
-# Comments entity in Google Datastore
 class Comments(db.Model):
+    """Comments entity in Google Datastore"""
     username = db.StringProperty(required=True)
     blog_id = db.IntegerProperty(required=True)
     comment = db.TextProperty(required=True)

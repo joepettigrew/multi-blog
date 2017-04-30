@@ -1,7 +1,9 @@
 from handler import Handler
 from models import Blogs
 
+
 class NewPost(Handler):
+    """Creates new post and stores in GDS"""
     def get(self):
         self.user_page("blogsubmit.html", "/signup", auth_user=self.user)
 

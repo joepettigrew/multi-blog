@@ -4,6 +4,7 @@ from util import comment_exists
 
 
 class EditComment(Handler):
+    """Edits comment for auth users"""
     def get(self):
         self.error(404)
 

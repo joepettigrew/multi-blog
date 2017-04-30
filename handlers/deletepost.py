@@ -4,6 +4,7 @@ from util import post_exists
 
 
 class DeletePost(Handler):
+    """Deletes blog posts for auth users"""
     def get(self):
         self.error(404)
 

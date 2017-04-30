@@ -1,8 +1,8 @@
 from google.appengine.ext import db
 
 
-# Users entity in Google Datastore
 class Users(db.Model):
+    """Users entity in Google Datastore"""
     username = db.StringProperty(required=True)
     password = db.StringProperty(required=True)
     email = db.StringProperty()

@@ -1,8 +1,8 @@
 from google.appengine.ext import db
 
 
-# Interactions entity in Google Datstore
 class Sentiment(db.Model):
+    """Interactions entity in Google Datstore"""
     username = db.StringProperty()
     blog_id = db.IntegerProperty()
     sentiment = db.BooleanProperty()
